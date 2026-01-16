@@ -2,199 +2,165 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Asistente Virtual</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Asistente IA</title>
     <style>
-        :root {
-            --primary: #38bdf8;
-            --secondary: #1d4ed8;
-            --bg: #0f172a;
-        }
-
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg);
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            justify-content: space-between;
-            height: 100vh;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        /* Contenedor del Avatar */
-        .avatar-wrapper {
-            position: relative;
-            margin-top: 20px;
-        }
-
-        .avatar-container {
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            border: 4px solid var(--primary);
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-            overflow: hidden;
-            background: #000;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Caja de Respuesta */
-        #respuesta-ia {
-            width: 100%;
-            max-width: 400px;
-            min-height: 80px;
-            max-height: 180px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            border-radius: 20px;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
             padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
-            font-size: 18px;
-            line-height: 1.4;
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-            margin: 20px 0;
-        }
-
-        /* Botón de Acción Principal */
-        #btn-escuchar {
+            max-width: 450px;
             width: 100%;
-            max-width: 320px;
-            padding: 22px;
-            border-radius: 50px;
-            border: none;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        #asistente-imagen {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%; /* Para que la imagen sea circular */
+            background-color: #ddd; /* Color de fondo por si la imagen no carga */
+            object-fit: cover; /* Asegura que la imagen cubra el círculo */
+            margin: 0 auto 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 4px solid #4CAF50;
+            transition: transform 0.2s ease-out; /* Transición suave para la animación */
+        }
+
+        /* Animación de "hablar" */
+        @keyframes talking-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); } /* Ligeramente más grande */
+            100% { transform: scale(1); }
+        }
+
+        .asistente-hablando {
+            animation: talking-animation 0.8s infinite alternate ease-in-out;
+        }
+
+        #status {
+            font-size: 1.1em;
+            color: #555;
+            min-height: 25px;
+            margin-bottom: 25px;
+        }
+        #toggleButton {
+            background-color: #4CAF50;
             color: white;
-            font-weight: 800;
-            font-size: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2em;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 30px;
-            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-
-        #btn-escuchar:active {
-            transform: scale(0.96);
-            filter: brightness(1.2);
+        #toggleButton:hover {
+            background-color: #45a049;
         }
-
-        .listening {
-            background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
-            animation: pulse 1.5s infinite;
+        #toggleButton:active {
+            transform: scale(0.98);
         }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        #toggleButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #888;
         }
     </style>
 </head>
 <body>
-
-    <div class="avatar-wrapper">
-        <div class="avatar-container">
-            <video id="vid" autoplay loop muted playsinline>
-                <source src="asistente.mp4" type="video/mp4">
-            </video>
-        </div>
+    <div class="container">
+        <h1>Mi Asistente IA con Voz</h1>
+        <img id="asistente-imagen" src="https://i.ibb.co/bF03zH7/placeholder.jpg" alt="Imagen del Asistente">
+        
+        <div id="status">Pulsa el botón y habla</div>
+        <button id="toggleButton">🎤 HABLAR CON ELLA</button>
+    </div>
+    <div class="footer">
+        Powered by OpenAI & Make.com
     </div>
 
-    <div id="respuesta-ia">¡Hola! Soy tu asistente. Pulsa el botón para hablar.</div>
-
-    <button id="btn-escuchar">🎤 Hablar con ella</button>
-
     <script>
-        const btn = document.getElementById('btn-escuchar');
-        const respuestaDiv = document.getElementById('respuesta-ia');
-        const vid = document.getElementById('vid');
-        const webhookURL = 'https://hook.eu1.make.com/plu328ps7314ezeaojep1gpgswq2s729';
+        // *** CONFIGURACIÓN IMPORTANTE ***
+        // Reemplaza esta URL con la URL de tu Webhook en Make.com
+        const webhookURL = 'TU_WEBHOOK_URL_DE_MAKE_AQUI'; 
+        // ********************************
 
-        // Configuración de Reconocimiento de Voz
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const toggleButton = document.getElementById('toggleButton');
+        const statusDiv = document.getElementById('status');
+        const asistenteImagen = document.getElementById('asistente-imagen');
+
+        let isListening = false;
         let recognition;
 
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES';
-            recognition.continuous = false;
-            recognition.interimResults = false;
+        // --- Configuración del Reconocimiento de Voz (Web Speech API) ---
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false; // Escucha una sola frase
+            recognition.interimResults = false; // Solo resultados finales
+            recognition.lang = 'es-ES'; // Idioma español
         } else {
-            alert("Tu navegador no soporta reconocimiento de voz. Usa Safari en iPhone.");
+            statusDiv.innerText = "Tu navegador no soporta el reconocimiento de voz.";
+            toggleButton.disabled = true;
         }
 
-        // Función de Voz (Text-to-Speech) mejorada para iOS
-        function hablar(texto) {
-            // Cancelar cualquier voz pendiente
-            window.speechSynthesis.cancel();
-
-            const mensaje = new SpeechSynthesisUtterance(texto);
-            mensaje.lang = 'es-ES';
-            
-            // Buscar una voz española de calidad si está disponible
-            const voces = window.speechSynthesis.getVoices();
-            const vozPref = voces.find(v => v.lang.includes('es') && v.name.includes('Monica')) || 
-                           voces.find(v => v.lang.includes('es')) || 
-                           voces[0];
-            
-            mensaje.voice = vozPref;
-            mensaje.rate = 1.0;
-            mensaje.pitch = 1.0;
-
-            window.speechSynthesis.speak(mensaje);
-        }
-
-        // Evento al pulsar el botón
-        btn.onclick = () => {
-            // ACTIVACIÓN DE AUDIO EN IOS: 
-            // Necesitamos emitir un sonido mudo para que Safari permita audio después
-            const mudo = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(mudo);
-
-            try {
-                recognition.start();
-            } catch (e) {
-                console.log("Ya estaba escuchando");
+        toggleButton.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                startListening();
             }
-        };
+        });
+
+        function startListening() {
+            if (!recognition) return;
+
+            toggleButton.disabled = true;
+            toggleButton.innerText = "Escuchando...";
+            statusDiv.innerText = "Dime algo...";
+            isListening = true;
+            recognition.start();
+        }
 
         recognition.onstart = () => {
-            btn.innerText = "Escuchando...";
-            btn.classList.add('listening');
-            respuestaDiv.innerText = "Te escucho...";
-        };
-
-        recognition.onerror = () => {
-            btn.classList.remove('listening');
-            btn.innerText = "🎤 Hablar con ella";
+            isListening = true;
+            toggleButton.disabled = false; // Permite detener si ya está escuchando
         };
 
         recognition.onresult = async (event) => {
-            btn.classList.remove('listening');
+            isListening = false;
             const textoUsuario = event.results[0][0].transcript;
-            respuestaDiv.innerText = "Tú: " + textoUsuario;
-            btn.innerText = "Pensando...";
+            statusDiv.innerText = "Tú: " + textoUsuario;
+            toggleButton.innerText = "Procesando respuesta...";
+            toggleButton.disabled = true;
 
             try {
-                // Enviar a Make
+                // Notificar al iPhone (y a la web) que la IA va a empezar a "hablar"
+                // Esto se hace con el JavaScript del Atajo, el iPhone lo ejecuta ANTES de leer el texto.
+                
                 const response = await fetch(webhookURL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -202,24 +168,58 @@
                 });
 
                 if (response.ok) {
-                    const respuestaTexto = await response.text();
-                    respuestaDiv.innerText = respuestaTexto;
-                    hablar(respuestaTexto); // La asistente habla
+                    const textoRespuesta = await response.text(); // Esperamos texto, no audio
+                    statusDiv.innerText = "Asistente: " + textoRespuesta;
+                    
+                    // Ahora necesitamos que el Atajo del iPhone tome este texto y lo hable.
+                    // Para que esto funcione, el Atajo debe:
+                    // 1. Obtener este texto de la respuesta del Webhook.
+                    // 2. Ejecutar JavaScript para activar la animación de la imagen (asistenteHablando).
+                    // 3. Leer el texto con la "Voz 2".
+                    // 4. Ejecutar JavaScript para desactivar la animación (asistenteCallada).
+
+                    // IMPORTANTE: El Atajo es quien maneja la voz y las señales de animación.
+                    // Aquí en la web, solo esperamos la señal del Atajo.
                 } else {
-                    respuestaDiv.innerText = "Error al obtener respuesta de la IA.";
+                    statusDiv.innerText = "Error al obtener respuesta de la IA.";
                 }
-            } catch (error) {
-                respuestaDiv.innerText = "Error de conexión con el servidor.";
-                console.error(error);
+            } catch (e) {
+                console.error("Error en la comunicación con Make:", e);
+                statusDiv.innerText = "Error de conexión con el servidor.";
             } finally {
-                btn.innerText = "🎤 Hablar con ella";
+                toggleButton.innerText = "🎤 HABLAR CON ELLA";
+                toggleButton.disabled = false;
+                // La animación se detendrá cuando el Atajo envíe 'asistenteCallada'
             }
         };
 
-        // Forzar que el video se reproduzca si el iPhone entra en ahorro de batería
-        document.addEventListener('touchstart', () => {
-            vid.play();
-        }, { once: true });
+        recognition.onerror = (event) => {
+            isListening = false;
+            toggleButton.disabled = false;
+            toggleButton.innerText = "🎤 HABLAR CON ELLA";
+            if (event.error === 'no-speech') {
+                statusDiv.innerText = "No se detectó voz. Inténtalo de nuevo.";
+            } else if (event.error === 'not-allowed') {
+                statusDiv.innerText = "Permiso de micrófono denegado. Revísalo en la configuración.";
+            } else {
+                statusDiv.innerText = "Error en el reconocimiento de voz: " + event.error;
+            }
+        };
+
+        recognition.onend = () => {
+            // isListening se gestiona en onresult o onerror para evitar race conditions
+        };
+
+        // --- Eventos personalizados desde el Atajo para controlar la animación ---
+        document.addEventListener('asistenteHablando', () => {
+            asistenteImagen.classList.add('asistente-hablando');
+            statusDiv.innerText = "Asistente hablando...";
+        });
+
+        document.addEventListener('asistenteCallada', () => {
+            asistenteImagen.classList.remove('asistente-hablando');
+            statusDiv.innerText = "Listo para otra pregunta.";
+        });
 
     </script>
 </body>
