@@ -1,53 +1,226 @@
-<div class="chat-container">
-    <p id="texto-pregunta" style="font-size: 12px; color: #38bdf8; margin-bottom: 5px;"></p>
-    <div id="respuesta-ia" style="padding: 10px; font-style: italic;">Pulsa para hablar...</div>
-    <button id="btn-escuchar" style="margin-top: 20px; padding: 15px 30px; border-radius: 30px; border: none; background: #38bdf8; color: white; font-weight: bold; font-size: 16px;">
-        🎤 Hablar con Ella
-    </button>
-</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asistente Virtual</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192">
 
-<script>
-    const btn = document.getElementById('btn-escuchar');
-    const respuestaDiv = document.getElementById('respuesta-ia');
-    const preguntaP = document.getElementById('texto-pregunta');
-    const webhookURL = 'https://hook.eu1.make.com/plu328ps7314ezeaojep1gpgswq2s729'; // <--- PEGA TU WEBHOOK DE MAKE AQUÍ
-
-    // Configurar reconocimiento de voz (Speech to Text)
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-
-    btn.onclick = () => {
-        recognition.start();
-        btn.innerText = "Escuchando...";
-    };
-
-    recognition.onresult = async (event) => {
-        const textoDicatado = event.results[0][0].transcript;
-        preguntaP.innerText = "Tú: " + textoDicatado;
-        btn.innerText = "Pensando...";
-
-        try {
-            // ENVIAR A MAKE (Igual que tu Atajo)
-            const response = await fetch(webhookURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: textoDicatado }) // Ajusta el nombre de la variable según tu Make
-            });
-
-            const data = await response.text(); // O .json() según cómo responda tu Make
-            respuestaDiv.innerText = data;
-            
-            // LEER EN VOZ ALTA (Text to Speech)
-            const synth = window.speechSynthesis;
-            const utterThis = new SpeechSynthesisUtterance(data);
-            utterThis.lang = 'es-ES';
-            synth.speak(utterThis);
-
-        } catch (error) {
-            respuestaDiv.innerText = "Error conectando con Make";
-        } finally {
-            btn.innerText = "🎤 Hablar con Ella";
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --secondary: #1d4ed8;
+            --bg: #0f172a;
         }
-    };
-</script>
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg);
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Contenedor del Avatar */
+        .avatar-wrapper {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .avatar-container {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+            overflow: hidden;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Caja de Respuesta */
+        #respuesta-ia {
+            width: 100%;
+            max-width: 400px;
+            min-height: 80px;
+            max-height: 180px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.4;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+        }
+
+        /* Botón de Acción Principal */
+        #btn-escuchar {
+            width: 100%;
+            max-width: 320px;
+            padding: 22px;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 800;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 30px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #btn-escuchar:active {
+            transform: scale(0.96);
+            filter: brightness(1.2);
+        }
+
+        .listening {
+            background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="avatar-wrapper">
+        <div class="avatar-container">
+            <video id="vid" autoplay loop muted playsinline>
+                <source src="asistente.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <div id="respuesta-ia">¡Hola! Soy tu asistente. Pulsa el botón para hablar.</div>
+
+    <button id="btn-escuchar">🎤 Hablar con ella</button>
+
+    <script>
+        const btn = document.getElementById('btn-escuchar');
+        const respuestaDiv = document.getElementById('respuesta-ia');
+        const vid = document.getElementById('vid');
+        const webhookURL = 'https://hook.eu1.make.com/plu328ps7314ezeaojep1gpgswq2s729';
+
+        // Configuración de Reconocimiento de Voz
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+        } else {
+            alert("Tu navegador no soporta reconocimiento de voz. Usa Safari en iPhone.");
+        }
+
+        // Función de Voz (Text-to-Speech) mejorada para iOS
+        function hablar(texto) {
+            // Cancelar cualquier voz pendiente
+            window.speechSynthesis.cancel();
+
+            const mensaje = new SpeechSynthesisUtterance(texto);
+            mensaje.lang = 'es-ES';
+            
+            // Buscar una voz española de calidad si está disponible
+            const voces = window.speechSynthesis.getVoices();
+            const vozPref = voces.find(v => v.lang.includes('es') && v.name.includes('Monica')) || 
+                           voces.find(v => v.lang.includes('es')) || 
+                           voces[0];
+            
+            mensaje.voice = vozPref;
+            mensaje.rate = 1.0;
+            mensaje.pitch = 1.0;
+
+            window.speechSynthesis.speak(mensaje);
+        }
+
+        // Evento al pulsar el botón
+        btn.onclick = () => {
+            // ACTIVACIÓN DE AUDIO EN IOS: 
+            // Necesitamos emitir un sonido mudo para que Safari permita audio después
+            const mudo = new SpeechSynthesisUtterance("");
+            window.speechSynthesis.speak(mudo);
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.log("Ya estaba escuchando");
+            }
+        };
+
+        recognition.onstart = () => {
+            btn.innerText = "Escuchando...";
+            btn.classList.add('listening');
+            respuestaDiv.innerText = "Te escucho...";
+        };
+
+        recognition.onerror = () => {
+            btn.classList.remove('listening');
+            btn.innerText = "🎤 Hablar con ella";
+        };
+
+        recognition.onresult = async (event) => {
+            btn.classList.remove('listening');
+            const textoUsuario = event.results[0][0].transcript;
+            respuestaDiv.innerText = "Tú: " + textoUsuario;
+            btn.innerText = "Pensando...";
+
+            try {
+                // Enviar a Make
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textoUsuario })
+                });
+
+                if (response.ok) {
+                    const respuestaTexto = await response.text();
+                    respuestaDiv.innerText = respuestaTexto;
+                    hablar(respuestaTexto); // La asistente habla
+                } else {
+                    respuestaDiv.innerText = "Error al obtener respuesta de la IA.";
+                }
+            } catch (error) {
+                respuestaDiv.innerText = "Error de conexión con el servidor.";
+                console.error(error);
+            } finally {
+                btn.innerText = "🎤 Hablar con ella";
+            }
+        };
+
+        // Forzar que el video se reproduzca si el iPhone entra en ahorro de batería
+        document.addEventListener('touchstart', () => {
+            vid.play();
+        }, { once: true });
+
+    </script>
+</body>
+</html>
