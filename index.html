@@ -1,0 +1,53 @@
+<div class="chat-container">
+    <p id="texto-pregunta" style="font-size: 12px; color: #38bdf8; margin-bottom: 5px;"></p>
+    <div id="respuesta-ia" style="padding: 10px; font-style: italic;">Pulsa para hablar...</div>
+    <button id="btn-escuchar" style="margin-top: 20px; padding: 15px 30px; border-radius: 30px; border: none; background: #38bdf8; color: white; font-weight: bold; font-size: 16px;">
+        🎤 Hablar con Ella
+    </button>
+</div>
+
+<script>
+    const btn = document.getElementById('btn-escuchar');
+    const respuestaDiv = document.getElementById('respuesta-ia');
+    const preguntaP = document.getElementById('texto-pregunta');
+    const webhookURL = 'https://hook.eu1.make.com/plu328ps7314ezeaojep1gpgswq2s729'; // <--- PEGA TU WEBHOOK DE MAKE AQUÍ
+
+    // Configurar reconocimiento de voz (Speech to Text)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+
+    btn.onclick = () => {
+        recognition.start();
+        btn.innerText = "Escuchando...";
+    };
+
+    recognition.onresult = async (event) => {
+        const textoDicatado = event.results[0][0].transcript;
+        preguntaP.innerText = "Tú: " + textoDicatado;
+        btn.innerText = "Pensando...";
+
+        try {
+            // ENVIAR A MAKE (Igual que tu Atajo)
+            const response = await fetch(webhookURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: textoDicatado }) // Ajusta el nombre de la variable según tu Make
+            });
+
+            const data = await response.text(); // O .json() según cómo responda tu Make
+            respuestaDiv.innerText = data;
+            
+            // LEER EN VOZ ALTA (Text to Speech)
+            const synth = window.speechSynthesis;
+            const utterThis = new SpeechSynthesisUtterance(data);
+            utterThis.lang = 'es-ES';
+            synth.speak(utterThis);
+
+        } catch (error) {
+            respuestaDiv.innerText = "Error conectando con Make";
+        } finally {
+            btn.innerText = "🎤 Hablar con Ella";
+        }
+    };
+</script>
